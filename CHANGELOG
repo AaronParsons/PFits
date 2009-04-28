@@ -1,0 +1,2 @@
+0.0.1
+* Initial release of a read-only FITS interface based on the CFITSIO C-API.

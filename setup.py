@@ -1,10 +1,39 @@
 from distutils.core import setup, Extension
 
 import os, glob, numpy, sys
+if 'upload' in sys.argv or 'register' in sys.argv:
+    from ez_setup import use_setuptools; use_setuptools()
+    from setuptools import setup, Extension
 
-def indir(dir, files): return [dir+f for f in files]
+__version__ = open('VERSION').read().strip()
+
+def get_description():
+    lines = [L.strip() for L in open('README').readlines()]
+    d_start = None
+    for cnt, L in enumerate(lines):
+        if L.startswith('DESCRIPTION'): d_start = cnt + 1
+        elif not d_start is None:
+            if len(L) == 0: return ' '.join(lines[d_start:cnt])
+    raise RuntimeError('Bad README')
+
+def indir(path, files):
+    return [os.path.join(path, f) for f in files]
 
 setup(name='pfits',
+    version = __version__,
+    description = 'A Python FITS interface built using CFITSIO',
+    long_description = get_description(),
+    license = 'GPL',
+    author = 'Aaron Parsons',
+    author_email = 'aparsons@astron.berkeley.edu',
+    url = 'http://pypi.python.org/pypi/pfits',
+    classifiers = [
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Topic :: Scientific/Engineering :: Astronomy',
+    ],
+    setup_requires = ['numpy>=1.2'],
     ext_modules = [
         Extension('pfits',
             ['src/pfits_wrap.cpp'] + \

@@ -1,0 +1,35 @@
+PFITS (A Python FITS iterface employing CFITSIO)
+
+DESCRIPTION
+    This package uses the CFITSIO library to interface to FITS files from
+    Python.  Particular attention has been paid to supporting ASCII and
+    BINARY tables with fixed and variable-length entries.  Data I/O is handled
+    through numpy arrays.
+
+INSTALLATION
+    PFITS requires Python >= 2.4 (and < 3.0 for now).  You also need to have
+    numpy >= 1.2 installed on your system.
+
+    INSTALL AS ROOT
+        > sudo python setup.py install
+
+    INSTALL AS USER
+        You'll first install to a directory of your choice:
+        $ python setup.py install --install-lib <module_dir> \
+            --install-scripts <scripts_dir>
+        This puts the python module in <module_dir>, and the command-line
+        scripts in <scripts_dir>.  The next thing is to tell python where to
+        look for the python module.  This is done by setting the PYTHONPATH
+        variable to point to <module_dir>.  In bash, this looks like:
+        $ export PYTHONPATH=<module_dir>
+        However, you'll have to type this every time you open a terminal.  To
+        avoid this, add the export line to the .bashrc file in your home dir.
+
+Enjoy,
+Aaron Parsons
+
+-----------------------------------------------------------------------------
+
+PACKAGE INFO FOR DEVELOPERS
+    This version of PFITS uses CFITSIO version 3.14, the code for which is
+    stored in src/cfitsio.  
