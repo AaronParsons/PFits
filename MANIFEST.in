@@ -7,5 +7,6 @@ include LICENSE-GPL
 include ez_setup.py
 include setup.py
 include MANIFEST.in
+include src/*
 include src/cfitsio/*
 include tests/*
