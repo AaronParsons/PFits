@@ -6,6 +6,11 @@ DESCRIPTION
     BINARY tables with fixed and variable-length entries.  Data I/O is handled
     through numpy arrays.
 
+ON THE WEB
+    There are further instructions, documentation, and a FAQ at:
+    http://setiathome.berkeley.edu/~aparsons/aipy/aipy.cgi/PFits
+
+
 INSTALLATION
     PFITS requires Python >= 2.4 (and < 3.0 for now).  You also need to have
     numpy >= 1.2 installed on your system.

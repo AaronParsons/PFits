@@ -26,7 +26,7 @@ setup(name='pfits',
     license = 'GPL',
     author = 'Aaron Parsons',
     author_email = 'aparsons@astron.berkeley.edu',
-    url = 'http://pypi.python.org/pypi/pfits',
+    url = 'http://setiathome.berkeley.edu/~aparsons/aipy/aipy.cgi/PFits',
     classifiers = [
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',

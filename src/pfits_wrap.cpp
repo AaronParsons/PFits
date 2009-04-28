@@ -407,12 +407,12 @@ PyObject *imghdu_get_data(HDUObject *self) {
         return Py_None;
     }
     for (i=0; i < ndim; i++) {
-        npy_dims[i] = dims[i];
-        nelements *= dims[i];
         if (dims[i] <= 0) {
             Py_INCREF(Py_None);
             return Py_None;
         }
+        npy_dims[i] = dims[i];
+        nelements *= dims[i];
         fpixel[i] = 1;
     }
     switch (bitpix) {
@@ -499,9 +499,9 @@ char *malloc_nulval(int n_dtype, long nvals) {
 PyObject *col_get_data(HDUObject *self, int colnum, long nrows) {
     PyArrayObject *rv;
     PyObject *rvtup;
-    int status=0, f_dtype, n_dtype, anynul, ndim, isvarlen=0;
+    int status=0, f_dtype, n_dtype, anynul, ndim;
     long repeat, offset, width, ii, jj, naxes[NPY_MAXDIMS];
-    npy_intp dims[NPY_MAXDIMS];
+    npy_intp npy_dims[NPY_MAXDIMS];
     char err_text[FLEN_ERRMSG], *nulval, **buf=NULL;
 
     // Get the data type of this column
@@ -509,9 +509,9 @@ PyObject *col_get_data(HDUObject *self, int colnum, long nrows) {
     fits_read_tdim(self->fptr, colnum+1, NPY_MAXDIMS, &ndim, naxes, &status);
     CHKSTATUS(status,err_text,NULL);
 
+    //printf("colnum:%d,dtype:%d\n",colnum+1,f_dtype);
     // Check if this is a variable length column
     if (f_dtype < 0) {
-        //printf("%d\n",f_dtype);
         f_dtype = -f_dtype;
         // Match column data type with numpy data type
         if (get_numpy_dtype(f_dtype, &n_dtype) != 0) return NULL;
@@ -530,8 +530,8 @@ PyObject *col_get_data(HDUObject *self, int colnum, long nrows) {
             if (f_dtype == TSTRING) {
                 nulval = malloc_nulval(n_dtype, width+1);
                 if (nulval == NULL) { Py_DECREF(rvtup); CHKNULL(nulval); }
-                dims[0] = 1;
-                rv = (PyArrayObject *) PyArray_New(&PyArray_Type,ndim,dims,
+                npy_dims[0] = 1;
+                rv = (PyArrayObject *) PyArray_New(&PyArray_Type,ndim,npy_dims,
                     n_dtype, NULL, NULL, width+1, 0, NULL);
                 if (rv == NULL) { free(nulval); Py_DECREF(rvtup); CHKNULL(rv); }
                 // Fill buf with string terminators b/c fits_read_col 
@@ -545,9 +545,8 @@ PyObject *col_get_data(HDUObject *self, int colnum, long nrows) {
             } else {
                 nulval = malloc_nulval(n_dtype, repeat);
                 if (nulval == NULL) { Py_DECREF(rvtup); CHKNULL(nulval); }
-                dims[0] = repeat;
-                rv = (PyArrayObject *) PyArray_New(&PyArray_Type,ndim,dims,
-                    n_dtype, NULL, NULL, 1, 0, NULL);
+                npy_dims[0] = repeat;
+                rv = (PyArrayObject *) PyArray_SimpleNew(ndim,npy_dims,n_dtype);
                 if (rv == NULL) { free(nulval); Py_DECREF(rvtup); CHKNULL(rv); }
                 fits_read_col(self->fptr, f_dtype, colnum+1, ii+1, 1, 
                     repeat, nulval, rv->data, &anynul, &status);
@@ -563,17 +562,12 @@ PyObject *col_get_data(HDUObject *self, int colnum, long nrows) {
     } else {
         // Match column data type with numpy data type
         if (get_numpy_dtype(f_dtype, &n_dtype) != 0) return NULL;
-            // Final axis is implicitly nrows
-            // If first dim is 1, don't bother making it an axis
-        if (ndim == 1 && naxes[0] == 1) {
-            dims[0] = nrows;
-        } else {
-            for (ii=0; ii < ndim; ii++) { dims[ii] = naxes[ii]; }
-            dims[ndim++] = nrows;
-        }
 
         if (f_dtype == TSTRING) {
-            rv = (PyArrayObject *) PyArray_New(&PyArray_Type, ndim, dims, 
+            ndim == 1;
+            npy_dims[0] = nrows;
+            //printf("width:%d\n", width);
+            rv = (PyArrayObject *) PyArray_New(&PyArray_Type, ndim, npy_dims, 
                 n_dtype, NULL, NULL, width+1, 0, NULL);
             CHKNULL(rv);
             buf = (char **) malloc(nrows*sizeof(char *));
@@ -592,8 +586,17 @@ PyObject *col_get_data(HDUObject *self, int colnum, long nrows) {
                 nrows, nulval, buf, &anynul, &status);
             free(buf); free(nulval);
         } else {
-            rv = (PyArrayObject *) PyArray_New(&PyArray_Type, ndim, dims, 
-                n_dtype, NULL, NULL, 1, 0, NULL);
+            // Final axis is implicitly nrows
+            // If first dim is 1, don't bother making it an axis
+            if (ndim == 1 && naxes[0] == 1) {
+                npy_dims[0] = nrows;
+            } else {
+                for (ii=0; ii < ndim; ii++) { npy_dims[ii] = naxes[ii]; }
+                npy_dims[ndim++] = nrows;
+            }
+            //printf("ndim:%d,n_dtype:%d\n", ndim, n_dtype);
+            //for (ii=0; ii<ndim; ii++) {printf("dim%d:%d\n",ii,npy_dims[ii]);}
+            rv = (PyArrayObject *) PyArray_SimpleNew(ndim, npy_dims, n_dtype);
             CHKNULL(rv);
             nulval = malloc_nulval(n_dtype, repeat);
             if (nulval == NULL) { Py_DECREF(rv); CHKNULL(nulval); }
